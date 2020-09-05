@@ -7,7 +7,8 @@
   "scripts": {
     "lint": "eslint .",
     "deploy": "firebase deploy",
-    "deploy:functions": "firebase deploy --only functions",
+    "deploy-only:functions": "firebase deploy --only functions",
+    "deploy-only:database": "firebase deploy --only database",
     "log": "firebase functions:log"
   },
   "dependencies": {

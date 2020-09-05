@@ -28,7 +28,7 @@ const SERVER_PORT = 3388;
 interface IPlexParams {
   on?: boolean,
   mute?: boolean,
-  volumeLevel?: number,
+  currentVolume?: number,
   activityState?: string,
   playbackState?: string,
 }
@@ -132,7 +132,7 @@ class LocalExecutionApp {
         };
         case 'action.devices.commands.setVolume':
           return {
-            volumeLevel: params.volumeLevel
+            currentVolume: params.currentVolume
         };
       default:
         console.error('Unknown command', command);

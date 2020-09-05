@@ -176,7 +176,7 @@ const queryFirebase = async (deviceId) => {
 const queryDevice = async (deviceId) => {
   const data = await queryFirebase(deviceId);
   return {
-    currentApplication: data.currentApplication,
+    currentApplication: '',
     on: data.on,
     activityState: data.activityState,
     playbackState: data.playbackState,
@@ -348,12 +348,7 @@ exports.reportstate = functions.database.ref('{deviceId}').onWrite(
     async (change, context) => {
       functions.logger.info('Firebase write event triggered Report State');
       const snapshot = change.after.val();
-
-      if (!snapshot) {
-        functions.logger.warn('No data');
-        return;
-      }
-
+     
       const requestBody = {
         requestId: 'ff36a3cc', /* Any unique ID */
         agentUserId: USER_ID,
@@ -390,8 +385,8 @@ exports.updatestate = functions.https.onRequest((request, response) => {
         on: request.body.on,
       },
       Volume: {
-        currentVolume: request.body.volumeLevel,
-        isMuted: request.body.mute,
+        currentVolume: request.body.currentVolume,
+        isMuted: request.body.isMuted,
       },
       MediaState: {
         activityState: request.body.activityState,

@@ -31,8 +31,6 @@ class Plex {
       on: false,
       isMuted: false,
       currentVolume: 0,
-      currentApplication: '',
-      currentApplicationName: '',
       activityState: 'ACTIVE',
       playbackState: 'PLAYING',
     };
