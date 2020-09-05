@@ -107,27 +107,51 @@ app.onSync((body) => {
     payload: {
       agentUserId: USER_ID,
       devices: [{
-        id: 'washer',
-        type: 'action.devices.types.WASHER',
-        traits: [
+        id: 'plex',
+        type: 'action.devices.types.REMOTECONTROL',
+        traits: [          
+          'action.devices.traits.AppSelector',
+          'action.devices.traits.MediaState',
+          'action.devices.traits.MediaState',
           'action.devices.traits.OnOff',
-          'action.devices.traits.StartStop',
-          'action.devices.traits.RunCycle',
+          'action.devices.traits.TransportControl',
+          'action.devices.traits.Volume',
+//          'action.devices.traits.Channel',
+//          'action.devices.traits.Modes',
+//          'action.devices.traits.Toggles',
         ],
         name: {
-          defaultNames: ['My Washer'],
-          name: 'Washer',
-          nicknames: ['Washer'],
+          defaultNames: ['My Plex'],
+          name: 'Plex',
+          nicknames: ['Plex'],
         },
         deviceInfo: {
           manufacturer: 'Acme Co',
-          model: 'acme-washer',
+          model: 'acme-plex',
           hwVersion: '1.0',
           swVersion: '1.0.1',
         },
         willReportState: true,
         attributes: {
-          pausable: true,
+          "availableApplications": [
+          ],
+
+          "availableInputs" : [],
+          "commandOnlyInputSelector" : true,
+
+          "supportActivityState": true,
+          'supportPlaybackState': true,
+
+          'transportControlSupportedCommands': [
+            'NEXT', 'PAUSE', 'PREVIOUS', 'RESUME', 'SEEK_RELATIVE', 'SEEK_TO_POSITION', 'SET_REPEAT', 'SHUFFLE', 'STOP'
+          ],
+
+          "volumeMaxLevel": 11,
+          "volumeCanMuteAndUnmute": true,
+          "levelStepSize": 2,
+          "commandOnlyVolume": false,
+          "volumeDefaultPercentage": 6
+
         },
         otherDeviceIds: [{
           deviceId: 'deviceid123',
@@ -142,23 +166,23 @@ const queryFirebase = async (deviceId) => {
   const snapshotVal = snapshot.val();
   return {
     on: snapshotVal.OnOff.on,
-    isPaused: snapshotVal.StartStop.isPaused,
-    isRunning: snapshotVal.StartStop.isRunning,
+    isMuted: snapshotVal.Volume.isMuted,
+    currentVolume: snapshotVal.Volume.currentVolume,
+    activityState: snapshotVal.MediaState.activityState,
+    playbackState: snapshotVal.MediaState.playbackState,
   };
 };
+
 const queryDevice = async (deviceId) => {
   const data = await queryFirebase(deviceId);
   return {
+    currentApplication: data.currentApplication,
     on: data.on,
-    isPaused: data.isPaused,
-    isRunning: data.isRunning,
-    currentRunCycle: [{
-      currentCycle: 'rinse',
-      nextCycle: 'spin',
-      lang: 'en',
-    }],
-    currentTotalRemainingTime: 1212,
-    currentCycleRemainingTime: 301,
+    activityState: data.activityState,
+    playbackState: data.playbackState,
+
+    currentVolume: data.currentVolume,
+    isMuted: data.isMuted,
   };
 };
 
@@ -189,19 +213,65 @@ app.onQuery(async (body) => {
 const updateDevice = async (execution, deviceId) => {
   const {params, command} = execution;
   let state; let ref;
+  //#region action.devices.traits.AppSelector
   switch (command) {
+    case 'action.devices.commands.appInstall':
+      state = {
+      };
+      ref = firebaseRef.child(deviceId).child('AppSelector');
+      break;
+    case 'action.devices.commands.appSearch':
+        state = {
+        };
+        ref = firebaseRef.child(deviceId).child('AppSelector');
+        break;
+    case 'action.devices.commands.appSelect':
+          state = {
+          };
+          ref = firebaseRef.child(deviceId).child('AppSelector');
+          break;
+    //#endregion
+
     case 'action.devices.commands.OnOff':
       state = {on: params.on};
       ref = firebaseRef.child(deviceId).child('OnOff');
       break;
-    case 'action.devices.commands.StartStop':
-      state = {isRunning: params.start};
-      ref = firebaseRef.child(deviceId).child('StartStop');
+
+    case 'action.devices.commands.mediaStop':
+      state = {playbackState: "STOPPED"};
+      ref = firebaseRef.child(deviceId).child('MediaState');
       break;
-    case 'action.devices.commands.PauseUnpause':
-      state = {isPaused: params.pause};
-      ref = firebaseRef.child(deviceId).child('StartStop');
+
+    case 'action.devices.commands.mediaNext':
+        ref = firebaseRef.child(deviceId).child('MediaState');
+        break;
+
+    case 'action.devices.commands.mediaPrevious':
+      ref = firebaseRef.child(deviceId).child('MediaState');
       break;
+  
+    case 'action.devices.commands.mediaPause':
+      state = {playbackState: "PAUSED"};
+      ref = firebaseRef.child(deviceId).child('MediaState');
+      break;
+
+    case 'action.devices.commands.mediaResume':
+      state = {playbackState: "PLAYING"};
+      ref = firebaseRef.child(deviceId).child('MediaState');
+      break;
+   
+    case 'action.devices.commands.mute':
+      state = {isMuted: params.mute};
+      ref = firebaseRef.child(deviceId).child('Volume');
+      break;
+
+    case 'action.devices.commands.setVolume':
+        state = {
+            currentVolume: params.volumeLevel,
+            isMuted: false
+        };
+        ref = firebaseRef.child(deviceId).child('Volume');
+        break;
   }
 
   return ref.update(state)
@@ -279,21 +349,29 @@ exports.reportstate = functions.database.ref('{deviceId}').onWrite(
       functions.logger.info('Firebase write event triggered Report State');
       const snapshot = change.after.val();
 
+      if (!snapshot) {
+        functions.logger.warn('No data');
+        return;
+      }
+
       const requestBody = {
         requestId: 'ff36a3cc', /* Any unique ID */
         agentUserId: USER_ID,
         payload: {
           devices: {
             states: {
-              /* Report the current state of our washer */
+              /* Report the current state of our plex */
               [context.params.deviceId]: {
                 on: snapshot.OnOff.on,
-                isPaused: snapshot.StartStop.isPaused,
-                isRunning: snapshot.StartStop.isRunning,
+                isMuted: snapshot.Volume.isMuted,
+                currentVolume: snapshot.Volume.currentVolume,
+                activityState: snapshot.MediaState.activityState ,
+                playbackState: snapshot.MediaState.playbackState ,
               },
             },
           },
         },
+        
       };
 
       const res = await homegraph.devices.reportStateAndNotification({
@@ -303,18 +381,31 @@ exports.reportstate = functions.database.ref('{deviceId}').onWrite(
     });
 
 /**
- * Update the current state of the washer device
+ * Update the current state of the plex device
  */
 exports.updatestate = functions.https.onRequest((request, response) => {
-  firebaseRef.child('washer').update({
-    OnOff: {
-      on: request.body.on,
-    },
-    StartStop: {
-      isPaused: request.body.isPaused,
-      isRunning: request.body.isRunning,
-    },
-  });
+  try {
+    firebaseRef.child('plex').update({
+      OnOff: {
+        on: request.body.on,
+      },
+      Volume: {
+        currentVolume: request.body.volumeLevel,
+        isMuted: request.body.mute,
+      },
+      MediaState: {
+        activityState: request.body.activityState,
+        playbackState: request.body.playbackState,
+      },
+      AppSelector: {
+        currentApplication: '',
+        currentApplicationName: '',
+      }
+    });
+  } catch (err) {
+    functions.logger.error(err);
+    response.status(500).send(`Error updatestate: ${err}`);
+  }
 
   return response.status(200).end();
 });

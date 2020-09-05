@@ -23,9 +23,9 @@ function SmartHome() {
     this.userWelcome = document.getElementById('user-welcome');
 
     // Bind events.
-    this.updateButton = document.getElementById('demo-washer-update');
+    this.updateButton = document.getElementById('demo-plex-update');
     this.updateButton.addEventListener('click', this.updateState.bind(this));
-    this.washer = document.getElementById('demo-washer');
+    this.plex = document.getElementById('demo-plex');
     this.requestSync = document.getElementById('request-sync');
     this.requestSync.addEventListener('click', async () => {
       try {
@@ -38,7 +38,7 @@ function SmartHome() {
     });
 
     this.initFirebase();
-    this.initWasher();
+    this.initPlex();
   }.bind(this));
 }
 
@@ -47,13 +47,13 @@ SmartHome.prototype.initFirebase = () => {
   console.log("Initialized Firebase");
 };
 
-SmartHome.prototype.initWasher = () => {
+SmartHome.prototype.initPlex = () => {
   console.log("Logged in as default user");
   this.uid = "123";
   this.smarthome.userWelcome.innerHTML = "Welcome user 123!";
 
   this.smarthome.handleData();
-  this.smarthome.washer.style.display = "block";
+  this.smarthome.plex.style.display = "block";
 }
 
 SmartHome.prototype.setToken = (token) => {
@@ -62,50 +62,55 @@ SmartHome.prototype.setToken = (token) => {
 
 SmartHome.prototype.handleData = () => {
   const uid = this.uid;
-  const elOnOff = document.getElementById('demo-washer-onOff');
-  const elRunCycle = document.getElementById('demo-washer-runCycle');
-  const elStartStopPaused = document.getElementById('demo-washer-startStopPaused');
-  const elStartStopRunning = document.getElementById('demo-washer-startStopRunning');
+  const elOnOff = document.getElementById('demo-plex-onOff');
+  const elCurrentVolume = document.getElementById('demo-plex-currentVolume-in');
+  const elIsMuted = document.getElementById('demo-plex-isMuted');
+  const elActivityState = document.getElementById('demo-plex-activityState-in');
+  const elPlaybackState = document.getElementById('demo-plex-playbackState-in');
 
-  firebase.database().ref('/').child('washer').on("value", (snapshot) => {
+  firebase.database().ref('/').child('plex').on("value", (snapshot) => {
     if (snapshot.exists()) {
-      const washerState = snapshot.val();
-      console.log(washerState)
+      const plexState = snapshot.val();
+      console.log(plexState)
 
-      if (washerState.OnOff.on) elOnOff.MaterialSwitch.on();
+      if (plexState.OnOff.on) elOnOff.MaterialSwitch.on();
       else elOnOff.MaterialSwitch.off();
 
-      if (washerState.RunCycle.dummy) elRunCycle.MaterialSwitch.on();
-      else elRunCycle.MaterialSwitch.off();
+      if (plexState.Volume.currentVolume) elCurrentVolume.value = plexState.Volume.currentVolume;
+      else elCurrentVolume.value = 0;
 
-      if (washerState.StartStop.isPaused) elStartStopPaused.MaterialSwitch.on();
-      else elStartStopPaused.MaterialSwitch.off();
+      if (plexState.Volume.isMuted) elIsMuted.MaterialSwitch.on();
+      else elIsMuted.MaterialSwitch.off();
 
-      if (washerState.StartStop.isRunning) elStartStopRunning.MaterialSwitch.on();
-      else elStartStopRunning.MaterialSwitch.off();
+      if (plexState.MediaState.activityState) elActivityState.value = plexState.MediaState.activityState;
+      if (plexState.MediaState.playbackState) elPlaybackState.value = plexState.MediaState.playbackState;
 
     }
   })
 }
 
 SmartHome.prototype.updateState = () => {
-  const elOnOff = document.getElementById('demo-washer-onOff');
-  const elRunCycle = document.getElementById('demo-washer-runCycle');
-  const elStartStopPaused = document.getElementById('demo-washer-startStopPaused');
-  const elStartStopRunning = document.getElementById('demo-washer-startStopRunning');
+  const elOnOff = document.getElementById('demo-plex-onOff');
+  const elCurrentVolume = document.getElementById('demo-plex-currentVolume-in');
+  const elIsMuted = document.getElementById('demo-plex-isMuted');
+  const elActivityState = document.getElementById('demo-plex-activityState-in');
+  const elPlaybackState = document.getElementById('demo-plex-playbackState-in');
 
   const pkg = {
     OnOff: { on: elOnOff.classList.contains('is-checked') },
-    RunCycle: { dummy: elRunCycle.classList.contains('is-checked') },
-    StartStop: {
-      isPaused: elStartStopPaused.classList.contains('is-checked'),
-      isRunning: elStartStopRunning.classList.contains('is-checked')
+    Volume: { 
+        currentVolume: elCurrentVolume.value,
+        isMuted: elIsMuted.classList.contains('is-checked')  
+    },
+    MediaState: {
+      activityState: elActivityState.value,
+      playbackState: elPlaybackState.value,
     }
   };
 
 
   console.log(pkg);
-  firebase.database().ref('/').child('washer').set(pkg);
+  firebase.database().ref('/').child('plex').set(pkg);
 }
 
 // Load the SmartHome.

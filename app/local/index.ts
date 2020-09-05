@@ -25,10 +25,12 @@ import IntentFlow = smarthome.IntentFlow;
 
 const SERVER_PORT = 3388;
 
-interface IWasherParams {
+interface IPlexParams {
   on?: boolean,
-  start?: boolean,
-  pause?: boolean,
+  mute?: boolean,
+  volumeLevel?: number,
+  activityState?: string,
+  playbackState?: string,
 }
 
 class LocalExecutionApp {
@@ -37,31 +39,30 @@ class LocalExecutionApp {
 
   identifyHandler(request: IntentFlow.IdentifyRequest):
       Promise<IntentFlow.IdentifyResponse> {
-      console.log("IDENTIFY intent: " + JSON.stringify(request, null, 2));
+    console.log("IDENTIFY intent: " + JSON.stringify(request, null, 2));
 
-      const scanData = request.inputs[0].payload.device.udpScanData;
-      if (!scanData) {
-        const err = new IntentFlow.HandlerError(request.requestId,
-            'invalid_request', 'Invalid scan data');
-        return Promise.reject(err);
-      }
-    
-      // In this codelab, the scan data contains only local device id.
-      const localDeviceId = Buffer.from(scanData.data, 'hex');
-    
-      const response: IntentFlow.IdentifyResponse = {
-        intent: Intents.IDENTIFY,
-        requestId: request.requestId,
-        payload: {
-          device: {
-            id: 'washer',
-            verificationId: localDeviceId.toString(),
-          }
+    const scanData = request.inputs[0].payload.device.udpScanData;
+    if (!scanData) {
+      const err = new IntentFlow.HandlerError(request.requestId, 'invalid_request', 'Invalid scan data');
+      return Promise.reject(err);
+    }
+
+    // In this codelab, the scan data contains only local device id.
+    const localDeviceId = Buffer.from(scanData.data, 'hex');
+
+    const response: IntentFlow.IdentifyResponse = {
+      intent: Intents.IDENTIFY,
+      requestId: request.requestId,
+      payload: {
+        device: {
+          id: 'plex',
+          verificationId: localDeviceId.toString(),
         }
-      };
-      console.log("IDENTIFY response: " + JSON.stringify(response, null, 2));
-    
-      return Promise.resolve(response);
+      }
+    };
+    console.log("IDENTIFY response: " + JSON.stringify(response, null, 2));
+
+    return Promise.resolve(response);
   }
 
   executeHandler(request: IntentFlow.ExecuteRequest):
@@ -72,14 +73,14 @@ class LocalExecutionApp {
     const execution = command.execution[0];
     const response = new Execute.Response.Builder()
       .setRequestId(request.requestId);
-  
+
     const promises: Array<Promise<void>> = command.devices.map((device) => {
       console.log("Handling EXECUTE intent for device: " + JSON.stringify(device));
-  
+
       // Convert execution params to a string for the local device
-      const params = execution.params as IWasherParams;
+      const params = execution.params as IPlexParams;
       const payload = this.getDataForCommand(execution.command, params);
-  
+
       // Create a command to send over the local network
       const radioCommand = new DataFlow.HttpRequestData();
       radioCommand.requestId = request.requestId;
@@ -89,9 +90,9 @@ class LocalExecutionApp {
       radioCommand.port = SERVER_PORT;
       radioCommand.method = Constants.HttpOperation.POST;
       radioCommand.isSecure = false;
-  
-      console.log("Sending request to the smart home device:", payload);
-  
+
+      console.log("Sending HTTP request to the smart home device:", payload);
+
       return this.app.getDeviceManager()
         .send(radioCommand)
         .then(() => {
@@ -105,14 +106,13 @@ class LocalExecutionApp {
           console.error('An error occurred sending the command', e.errorCode);
         });
     });
-  
+
     return Promise.all(promises)
       .then(() => {
         return response.build();
       })
       .catch((e) => {
-        const err = new IntentFlow.HandlerError(request.requestId,
-            'invalid_request', e.message);
+        const err = new IntentFlow.HandlerError(request.requestId, 'invalid_request', e.message);
         return Promise.reject(err);
       });
   }
@@ -120,19 +120,19 @@ class LocalExecutionApp {
   /**
    * Convert execution request into a local device command
    */
-  getDataForCommand(command: string, params: IWasherParams): unknown {
+  getDataForCommand(command: string, params: IPlexParams): unknown {
     switch (command) {
       case 'action.devices.commands.OnOff':
         return {
           on: params.on ? true : false
         };
-      case 'action.devices.commands.StartStop':
+      case 'action.devices.commands.mute':
         return {
-          isRunning: params.start ? true : false
+          mute: params.mute ? true : false
         };
-      case 'action.devices.commands.PauseUnpause':
-        return {
-          isPaused: params.pause ? true : false
+        case 'action.devices.commands.setVolume':
+          return {
+            volumeLevel: params.volumeLevel
         };
       default:
         console.error('Unknown command', command);

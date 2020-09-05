@@ -18,7 +18,7 @@ const dgram = require('dgram');
 const express = require('express');
 const logger = require('./logger');
 
-const Washer = require('./washer');
+const Plex = require('./plex');
 const argv = require(`yargs`)
   .options({
     deviceId: {
@@ -55,8 +55,8 @@ const argv = require(`yargs`)
 
 const SERVER_PORT = 3388;
 
-// Create a washer device
-const virtualDevice = new Washer(argv.projectId);
+// Create a plex device
+const virtualDevice = new Plex(argv.projectId);
 
 // Start the UDP server
 const udpServer = dgram.createSocket('udp4');

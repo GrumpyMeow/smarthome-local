@@ -18,19 +18,23 @@ const axios = require('axios');
 const logger = require('./logger');
 
 /**
- * Representation of a smart washer device.
+ * Representation of a Plex device.
  */
-class Washer {
+class Plex {
   /**
-   * Create a new washer instance
+   * Create a new plex instance
    * @param {string} projectId Endpoint to publish state updates
    */
   constructor(projectId) {
     this.reportStateEndpointUrl = `https://${projectId}.firebaseapp.com/updatestate`;
     this._state = {
       on: false,
-      isRunning: false,
-      isPaused: false,
+      isMuted: false,
+      currentVolume: 0,
+      currentApplication: '',
+      currentApplicationName: '',
+      activityState: 'ACTIVE',
+      playbackState: 'PLAYING',
     };
     this.reportState();
   }
@@ -49,13 +53,7 @@ class Washer {
    * Print the current device state
    */
   print() {
-    if (this._state.on) {
-      const runState = this._state.isPaused
-        ? 'PAUSED' : this._state.isRunning ? 'RUNNING' : 'STOPPED';
-      logger.info(`***** The washer is ${runState} *****`);
-    } else {
-      logger.info(`***** The washer is OFF *****`);
-    }
+    logger.info(this._state);
   }
 
   /**
@@ -72,4 +70,4 @@ class Washer {
   }
 }
 
-module.exports = Washer;
+module.exports = Plex;

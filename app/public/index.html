@@ -50,47 +50,58 @@
     </header>
     <main class="mdl-layout__content mdl-color--grey-100">
       <div class="mdl-cell--16-col mdl-cell--16-col-tablet mdl-grid">
-        <div id="demo-washer" class="demo-card-square mdl-card mdl-shadow--2dp"
+        <div id="demo-plex" class="demo-card-square mdl-card mdl-shadow--2dp"
           style="display:none;">
           <div class="mdl-card__title mdl-card--expand">
-            <h2 class="mdl-card__title-text">Smart Washer</h2>
+            <h2 class="mdl-card__title-text">Plex</h2>
           </div>
           <div class="mdl-card__supporting-text">
-            <h4 id='washer-id'>id 'washer'</h4>
+            <h4 id='plex-id'>id 'plex'</h4>
 
-            <div id='demo-washer-onOff-main'>
-              <label id="demo-washer-onOff" class="mdl-switch mdl-js-switch mdl-js-ripple-effect"
-                for="demo-washer-onOff-in">
-                <input type="checkbox" id="demo-washer-onOff-in" class="mdl-switch__input">
+            <div id='demo-plex-onOff-main'>
+              <label id="demo-plex-onOff" class="mdl-switch mdl-js-switch"
+                for="demo-plex-onOff-in">
+                <input type="checkbox" id="demo-plex-onOff-in" class="mdl-switch__input">
                 <span class="mdl-switch__label">Is On</span>
               </label>
             </div>
-            <div id='demo-washer-runCycle-main'>
-              <label id="demo-washer-runCycle" class="mdl-switch mdl-js-switch mdl-js-ripple-effect"
-                for="demo-washer-runCycle-in">
-                <input type="checkbox" id="demo-washer-runCycle-in" class="mdl-switch__input">
-                <span class="mdl-switch__label">Is in Dummy RunCycle</span>
+            <div id='demo-plex-isMuted-main'>
+              <label id="demo-plex-isMuted" class="mdl-switch mdl-js-switch"
+                for="demo-plex-isMuted-in">
+                <input type="checkbox" id="demo-plex-isMuted-in" class="mdl-switch__input">
+                <span class="mdl-switch__label">Is Muted</span>
               </label>
             </div>
-            <div id='demo-washer-startStopPaused-main'>
-              <label id="demo-washer-startStopPaused" class="mdl-switch mdl-js-switch mdl-js-ripple-effect"
-                for="demo-washer-startStopPaused-in">
-                <input type="checkbox" id="demo-washer-startStopPaused-in" class="mdl-switch__input">
-                <span class="mdl-switch__label">Is Paused</span>
+            <div id='demo-plex-currentVolume-main'>
+              <label id="demo-plex-currentVolume" class="mdl-slider mdl-js-slider"
+                for="demo-plex-currentVolume-in">
+                <input type="range" id="demo-plex-currentVolume-in" class="mdl-slider__input" min="0" max="11" value="0">
+                <span class="mdl-slider__label">CurrentVolume</span>
               </label>
             </div>
-            <div id='demo-washer-startStopRunning-main'>
-              <label id="demo-washer-startStopRunning" class="mdl-switch mdl-js-switch mdl-js-ripple-effect"
-                for="demo-washer-startStopRunning-in">
-                <input type="checkbox" id="demo-washer-startStopRunning-in" class="mdl-switch__input">
-                <span class="mdl-switch__label">Is Running</span>
+
+            <div id='demo-plex-activityState-main'>
+              <label id="demo-plex-activityState" class="mdl-textfield mdl-js-textfield"
+                for="demo-plex-activityState-in">
+                <input type="text" id="demo-plex-activityState-in" class="mdl-textfield__input">
+                <span class="mdl-textfield__label">activityState</span>
               </label>
             </div>
+
+            <div id='demo-plex-playbackState-main'>
+              <label id="demo-plex-playbackState" class="mdl-textfield mdl-js-textfield"
+                for="demo-plex-playbackState-in">
+                <input type="text" id="demo-plex-playbackState-in" class="mdl-textfield__input">
+                <span class="mdl-textfield__label">PlaybackState</span>
+              </label>
+            </div>
+
+            
             <br>
 
           </div>
           <div class="mdl-card__actions mdl-card--border">
-            <a id="demo-washer-update" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+            <a id="demo-plex-update" class="mdl-button mdl-button--colored mdl-js-button">
               Update
             </a>
           </div>
