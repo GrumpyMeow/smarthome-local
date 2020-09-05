@@ -5,7 +5,9 @@
     "node": "10"
   },
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "deploy": "firebase deploy",
+    "deploy:functions": "firebase deploy --only functions"
   },
   "dependencies": {
     "actions-on-google": "^2.12.0",
